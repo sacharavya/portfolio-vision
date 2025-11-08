@@ -1,0 +1,186 @@
+"""
+Report generation module
+"""
+import pandas as pd
+from datetime import datetime
+from typing import Dict, List
+
+
+def generate_markdown_report(
+    portfolio_data: Dict,
+    simulation_data: Dict,
+    optimization_data: Dict,
+    analytics_data: Dict
+) -> str:
+    """
+    Generate comprehensive markdown report
+
+    Args:
+        portfolio_data: Portfolio information and metrics
+        simulation_data: Simulation results
+        optimization_data: Optimization results
+        analytics_data: Analytics results
+
+    Returns:
+        Markdown formatted report string
+    """
+    report = f"""# Portfolio Vision - Investment Report
+
+**Generated:** {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+
+---
+
+## Portfolio Summary
+
+"""
+
+    # Portfolio holdings
+    if 'holdings' in portfolio_data and not portfolio_data['holdings'].empty:
+        report += "### Current Holdings\n\n"
+        report += portfolio_data['holdings'].to_markdown(index=False)
+        report += "\n\n"
+
+    # Portfolio metrics
+    if 'metrics' in portfolio_data:
+        metrics = portfolio_data['metrics']
+        report += f"""### Portfolio Metrics
+
+- **Total Market Value:** ${metrics.get('total_value', 0):,.2f}
+- **Annual Return:** {metrics.get('annual_return', 0):.2%}
+- **Annual Volatility:** {metrics.get('annual_volatility', 0):.2%}
+- **Sharpe Ratio:** {metrics.get('sharpe_ratio', 0):.3f}
+
+"""
+
+    # Simulation results
+    if simulation_data:
+        report += f"""---
+
+## Simulation Results
+
+### Monte Carlo Projection
+
+"""
+        if 'mc_stats' in simulation_data:
+            stats = simulation_data['mc_stats']
+            report += f"""- **Simulation Horizon:** {simulation_data.get('horizon_days', 0)} days
+- **Number of Simulations:** {simulation_data.get('n_simulations', 0)}
+- **Median Outcome (P50):** ${stats.get('p50', 0):,.2f}
+- **Pessimistic (P10):** ${stats.get('p10', 0):,.2f}
+- **Optimistic (P90):** ${stats.get('p90', 0):,.2f}
+- **Expected Value:** ${stats.get('mean', 0):,.2f}
+- **Standard Deviation:** ${stats.get('std', 0):,.2f}
+
+"""
+
+    # Optimization results
+    if optimization_data:
+        report += f"""---
+
+## Optimization Suggestions
+
+"""
+        if 'max_sharpe_weights' in optimization_data:
+            report += "### Maximum Sharpe Ratio Portfolio\n\n"
+            weights_df = pd.DataFrame([
+                {'Ticker': k, 'Optimal Weight (%)': v * 100}
+                for k, v in optimization_data['max_sharpe_weights'].items()
+            ])
+            report += weights_df.to_markdown(index=False)
+            report += "\n\n"
+
+            if 'max_sharpe_performance' in optimization_data:
+                perf = optimization_data['max_sharpe_performance']
+                report += f"""**Performance Metrics:**
+- Expected Return: {perf.get('expected_return', 0):.2%}
+- Volatility: {perf.get('volatility', 0):.2%}
+- Sharpe Ratio: {perf.get('sharpe_ratio', 0):.3f}
+
+"""
+
+        if 'min_var_weights' in optimization_data:
+            report += "### Minimum Variance Portfolio\n\n"
+            weights_df = pd.DataFrame([
+                {'Ticker': k, 'Optimal Weight (%)': v * 100}
+                for k, v in optimization_data['min_var_weights'].items()
+            ])
+            report += weights_df.to_markdown(index=False)
+            report += "\n\n"
+
+            if 'min_var_performance' in optimization_data:
+                perf = optimization_data['min_var_performance']
+                report += f"""**Performance Metrics:**
+- Expected Return: {perf.get('expected_return', 0):.2%}
+- Volatility: {perf.get('volatility', 0):.2%}
+- Sharpe Ratio: {perf.get('sharpe_ratio', 0):.3f}
+
+"""
+
+    # Analytics
+    if analytics_data:
+        report += f"""---
+
+## Advanced Analytics
+
+"""
+        if 'diversification_ratio' in analytics_data:
+            report += f"**Diversification Ratio:** {analytics_data['diversification_ratio']:.3f}\n\n"
+
+        if 'pca_variance_explained' in analytics_data:
+            report += "### Principal Component Analysis\n\n"
+            var_exp = analytics_data['pca_variance_explained']
+            for i, var in enumerate(var_exp, 1):
+                report += f"- PC{i}: {var:.2%} variance explained\n"
+            report += "\n"
+
+        if 'clusters' in analytics_data and not analytics_data['clusters'].empty:
+            report += "### Asset Clustering\n\n"
+            report += analytics_data['clusters'].to_markdown(index=False)
+            report += "\n\n"
+
+    # Disclaimer
+    report += f"""---
+
+## Disclaimer
+
+This report is generated for **educational purposes only**. The projections, optimizations, and analytics presented here are based on historical data and mathematical models. They do not constitute financial advice, and past performance does not guarantee future results.
+
+Please consult with a qualified financial advisor before making any investment decisions.
+
+---
+
+*Generated by Portfolio Vision - An educational investment simulation tool*
+"""
+
+    return report
+
+
+def generate_weights_csv(weights: Dict[str, float]) -> str:
+    """
+    Generate CSV content for portfolio weights
+
+    Args:
+        weights: Portfolio weights dictionary
+
+    Returns:
+        CSV formatted string
+    """
+    df = pd.DataFrame([
+        {'Ticker': k, 'Weight': v, 'Weight (%)': v * 100}
+        for k, v in weights.items()
+    ])
+
+    return df.to_csv(index=False)
+
+
+def generate_holdings_csv(holdings_df: pd.DataFrame) -> str:
+    """
+    Generate CSV content for portfolio holdings
+
+    Args:
+        holdings_df: Holdings DataFrame
+
+    Returns:
+        CSV formatted string
+    """
+    return holdings_df.to_csv(index=False)
