@@ -38,7 +38,7 @@ ENV/
 .ipynb_checkpoints
 
 # Streamlit
-.streamlit/
+# .streamlit/ - commenting out so Railway can use config.toml
 
 # Data files
 *.csv
