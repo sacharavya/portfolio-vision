@@ -60,3 +60,6 @@ reports/
 
 # OS
 Thumbs.db
+
+*.md
+!README.md
