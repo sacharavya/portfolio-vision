@@ -1,4 +1,6 @@
 # Python
+*.md
+!README.md
 __pycache__/
 *.py[cod]
 *$py.class
@@ -61,5 +63,4 @@ reports/
 # OS
 Thumbs.db
 
-*.md
-!README.md
+
